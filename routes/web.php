@@ -13,7 +13,6 @@ use App\Livewire\Reports;
 use App\Livewire\Cashout;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GraphicsController;
-use App\Livewire\ApiIntegration;
 use App\Http\Controllers\HomeController;
 use App\Livewire\Settings\Components;
 use App\Livewire\Companies;
@@ -51,7 +50,6 @@ Route::middleware(['auth','checkStatus'])->group(function () {
         Route::get('reports', Reports::class)->name('reports');
         Route::get('cashout', Cashout::class)->name('cashout');
         Route::get('graphics', [GraphicsController::class, 'index'])->name('graphics');
-        Route::get('api', ApiIntegration::class)->name('api');
 
         //REPORTE GENERAL DE VENTAS PDF
         Route::get('report/pdf/{user}/{type}/{f1}/{f2}/{selectTipoEstado}', [ExportController::class, 'reportPDF']);
