@@ -21,7 +21,7 @@ class ProductSeeder extends Seeder
             'stock'=> 100,
             'alerts'=> 10,
             'category_id'=> 1,
-            'image'=>'686c6bd17c75d_.png'
+            'image'=>'laravel123.png'
         ]);
         Product::create([
             'name'=>'RUNING',
@@ -31,7 +31,7 @@ class ProductSeeder extends Seeder
             'stock'=> 100,
             'alerts'=> 10,
             'category_id'=> 2,
-            'image'=>'tenis.png'
+            'image'=>'runing123.jpg'
         ]);
         Product::create([
             'name'=>'IPHONE 13',
@@ -41,7 +41,7 @@ class ProductSeeder extends Seeder
             'stock'=> 130,
             'alerts'=> 10,
             'category_id'=> 3,
-            'image'=>'69da9b7bebb78_.jpg'
+            'image'=>'iphone123.webp'
         ]);
         Product::create([
             'name'=>'PC GAMER',
@@ -51,7 +51,7 @@ class ProductSeeder extends Seeder
             'stock'=> 156,
             'alerts'=> 10,
             'category_id'=> 4,
-            'image'=>'public/products/681f973dba57d_.png'
+            'image'=>'public/img/gamers123.png'
         ]);
         Product::create([
             'name'=>'STOCK_BAJO',
@@ -61,7 +61,7 @@ class ProductSeeder extends Seeder
             'stock'=> 9,
             'alerts'=> 10,
             'category_id'=> 5,
-            'image'=>'storage/app/public/products/681f973dba57d_.png'
+            'image'=>'storage/app/public/noimg.png'
         ]);
     }
 }

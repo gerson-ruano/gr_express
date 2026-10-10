@@ -250,7 +250,7 @@
                 <tr>
 
                     <td class="label">
-                        Cliente:
+                        Consumidor:
                     </td>
 
                     <td>

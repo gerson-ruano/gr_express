@@ -308,7 +308,7 @@
 
         setTimeout(function () {
             Livewire.dispatch('closeModal');  // Emite el evento de cierre del modal
-        }, 100);  // Espera 500 ms para asegurarse de que el PDF se ha abierto primero
+        }, 500);  // Espera 500 ms para asegurarse de que el PDF se ha abierto primero
     }
 
     // ============================================================
@@ -378,7 +378,7 @@
 
             openThermalPdfWindow(url);
 
-        }, 300);
+        }, 2000);
 
     });
 

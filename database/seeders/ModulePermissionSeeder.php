@@ -84,10 +84,6 @@ class ModulePermissionSeeder extends Seeder
                 'pos.view',
                 'pos.details',
             ],
-            'api' => [
-                'api.view',
-                'api.create',
-            ],
         ];
 
         foreach ($modulePermissions as $moduleKey => $permissions) {
@@ -148,7 +144,6 @@ class ModulePermissionSeeder extends Seeder
             'graphics' => 'Graficas',
             'assign' => 'Asignar',
             'pos' => 'Ventas',
-            'api' => 'Facturación',
         ][$key] ?? ucfirst($key);
     }
 }

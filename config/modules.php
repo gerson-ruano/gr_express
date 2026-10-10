@@ -131,14 +131,14 @@ return [
             ],
         ],
     ],
-    'api' => [
+    /*'api' => [
         'label' => 'API FACTUS',
         'icon' => 'fas fa-plug',
         'route' => 'api',
         'roles' => ['Admin'],
         'description' => 'Mòdulo de API de Facturacion electronica de FACTUS colombia, creacion, visualizacion y busqueda de facturas.',
     ],
-    /*'configuracion' => [
+    'configuracion' => [
         'label' => 'Configuraciones',
         'icon' => 'fas fa-cogs',
         'route' => 'configuracion',

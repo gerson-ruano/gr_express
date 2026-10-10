@@ -27,5 +27,7 @@ class DepartamentoSeeder extends Seeder
         foreach ($departamentos as $nombre) {
             Departamento::create(['nombre' => $nombre]);
         }
+
+        $this->command->info('✅ Se han creado los 22 Departamentos de Guatemala');
     }
 }

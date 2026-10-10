@@ -213,7 +213,7 @@
     <tr>
 
         <td>
-            Vendedor:
+            Consumidor:
         </td>
 
         <td class="right">
