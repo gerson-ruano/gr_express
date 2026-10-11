@@ -14,9 +14,9 @@ class CompanySeeder extends Seeder
     public function run(): void
     {
         Company::create([
-            'name'=> 'Ventas GR',
+            'name'=> 'Tienda Express',
             'address'=> 'Ciudad de Guatemala',
-            'email'=> 'ventasgr@gmail.com',
+            'email'=> 'express@gmail.com',
             'phone'=> '22334455',
             'nit'=> '1234567',
             'image'=> '69da985981217_.png'

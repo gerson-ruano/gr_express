@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
         $adminUser = User::create([
             'name'=>'Administrador',
             'phone'=>'23423424',
-            'email'=>'admin@ventasgr.com',
+            'email'=>'admin@express.com',
             'profile'=>'Admin',
             'status'=>'Active',
             'tema'=> 1,
@@ -30,7 +30,7 @@ class UserSeeder extends Seeder
         $employeeUser = User::create([
             'name'=>'Empleado',
             'phone'=>'10295343',
-            'email'=>'employee@ventasgr.com',
+            'email'=>'employee@express.com',
             'profile'=>'Employee',
             'status'=>'Active',
             'tema'=> 1,
@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
         $sellerUser = User::create([
             'name'=>'Vendedor',
             'phone'=>'12345678',
-            'email'=>'seller@ventasgr.com',
+            'email'=>'seller@express.com',
             'profile'=>'Seller',
             'status'=>'Active',
             'tema'=> 1,

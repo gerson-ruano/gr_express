@@ -725,12 +725,12 @@
 </div>
 
 
-<div class="text-center footer-ticket">
+<!--div class="text-center footer-ticket">
 
     Venta #
     {{ $getNextSaleNumber }}
 
-</div>
+</div-->
 
 
 </body>

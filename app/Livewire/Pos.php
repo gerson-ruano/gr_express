@@ -34,6 +34,7 @@ class Pos extends Component
     public $isModalOpen = false;
     public $currency = ''; // Moneda por defecto
     public $municipios = [];
+    public $clienteEncontrado = false;
 
 
     public function mount()
@@ -90,20 +91,178 @@ class Pos extends Component
 
     public function updatedCustomerDepartamentoId($value)
     {
-        if ($value) {
-            $this->municipios = Municipio::where('departamento_id', $value)->get();
-            $this->customer_municipio_id = null; // Resetear municipio cuando cambia departamento
-        } else {
+        $this->cargarMunicipios($value);
+    }
+
+    private function cargarMunicipios($departamentoId, $municipioId = null)
+    {
+        if (!$departamentoId) {
             $this->municipios = collect();
             $this->customer_municipio_id = null;
+
+            return;
         }
+
+        $this->municipios = Municipio::where(
+            'departamento_id',
+            $departamentoId
+        )
+            ->orderBy('nombre')
+            ->get();
+
+        if ($municipioId) {
+
+            $municipioExiste = $this->municipios->contains(function ($municipio) use ($municipioId) {
+                return (string) $municipio->id === (string) $municipioId;
+            });
+
+            $this->customer_municipio_id = $municipioExiste
+                ? (string) $municipioId
+                : null;
+
+        } else {
+
+            $this->customer_municipio_id = null;
+        }
+    }
+
+    public function buscarClientePorNit()
+    {
+        $this->resetValidation('customer_nit');
+
+        $nit = trim($this->customer_nit);
+
+        if (empty($nit)) {
+
+            $this->dispatch(
+                'showNotification',
+                'Ingrese un NIT para realizar la búsqueda',
+                'warning'
+            );
+
+            return;
+        }
+
+
+        if (strtoupper($nit) === 'CF') {
+
+            $this->clienteEncontrado = false;
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSCAR CLIENTE EN VENTAS ANTERIORES
+        |--------------------------------------------------------------------------
+        */
+
+        $sale = Sale::where(
+            'customer_data->nit',
+            $nit
+        )
+            ->whereNotNull('customer_data')
+            ->latest('id')
+            ->first();
+
+
+        if (!$sale) {
+
+            $this->clienteEncontrado = false;
+
+            $this->dispatch(
+                'showNotification',
+                'Cliente no encontrado. Puede ingresar sus datos.',
+                'info'
+            );
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATOS DEL CLIENTE
+        |--------------------------------------------------------------------------
+        */
+
+        $customer = $sale->customer_data;
+
+
+        if (!is_array($customer)) {
+
+            $customer =
+                json_decode(
+                    $customer,
+                    true
+                ) ?? [];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATOS GENERALES
+        |--------------------------------------------------------------------------
+        */
+
+        $this->customer_name =
+            $customer['name'] ?? '';
+
+        $this->customer_nit =
+            $customer['nit'] ?? $nit;
+
+        $this->customer_address =
+            $customer['address'] ?? '';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEPARTAMENTO Y MUNICIPIO
+        |--------------------------------------------------------------------------
+        |
+        | Primero obtenemos ambos IDs.
+        |
+        */
+
+        $departamentoId = $customer['departamento_id'] ?? null;
+        $municipioId = $customer['municipio_id'] ?? null;
+
+        $this->customer_departamento_id = $departamentoId
+            ? (string) $departamentoId
+            : null;
+
+        $this->cargarMunicipios(
+            $departamentoId,
+            $municipioId
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLIENTE ENCONTRADO
+        |--------------------------------------------------------------------------
+        */
+
+        $this->clienteEncontrado = true;
+
+
+        $this->dispatch(
+            'showNotification',
+            'Cliente encontrado: ' . $this->customer_name,
+            'success'
+        );
     }
 
     public function openModal()
     {
         $this->isModalOpen = true;
         if ($this->customer_departamento_id) {
-            $this->municipios = Municipio::where('departamento_id', $this->customer_departamento_id)->get();
+
+            $this->cargarMunicipios(
+                $this->customer_departamento_id,
+                $this->customer_municipio_id
+            );
         }
 
     }
@@ -121,39 +280,96 @@ class Pos extends Component
         $departamentoNombre = null;
         $municipioNombre = null;
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEPARTAMENTO
+        |--------------------------------------------------------------------------
+        */
+
         if ($this->customer_departamento_id) {
-            $departamento = Departamento::find($this->customer_departamento_id);
-            $departamentoNombre = $departamento ? $departamento->nombre : null;
+
+            $departamento = Departamento::find(
+                $this->customer_departamento_id
+            );
+
+            $departamentoNombre =
+                $departamento
+                    ? $departamento->nombre
+                    : null;
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MUNICIPIO
+        |--------------------------------------------------------------------------
+        */
 
         if ($this->customer_municipio_id) {
-            $municipio = Municipio::find($this->customer_municipio_id);
-            $municipioNombre = $municipio ? $municipio->nombre : null;
+
+            $municipio = Municipio::find(
+                $this->customer_municipio_id
+            );
+
+            $municipioNombre =
+                $municipio
+                    ? $municipio->nombre
+                    : null;
         }
 
-        // Construir dirección completa si hay departamento y municipio
-        $direccionCompleta = $this->customer_address;
-        if ($municipioNombre) {
-            $direccionCompleta = ($direccionCompleta ? $direccionCompleta . ', ' : '') . $municipioNombre;
-        }
-        if ($departamentoNombre) {
-            $direccionCompleta = ($direccionCompleta ? $direccionCompleta . ', ' : '') . $departamentoNombre;
-        }
 
-        // Guardar en el array temporal
+        /*
+        |--------------------------------------------------------------------------
+        | DATOS TEMPORALES DEL CLIENTE
+        |--------------------------------------------------------------------------
+        */
+
         $this->customer_data = [
-            'name' => $this->customer_name,
-            'nit' => $this->customer_nit,
-            'method_page' => $this->customer_method_page,
-            'ref_page' => $this->customer_ref_page,
-            'address' => $this->customer_address,
-            'departamento_id' => $this->customer_departamento_id,
-            'municipio_id' => $this->customer_municipio_id,
-            'departamento_nombre' => $departamentoNombre,
-            'municipio_nombre' => $municipioNombre,
+
+            'name' =>
+                $this->customer_name,
+
+            'nit' =>
+                $this->customer_nit,
+
+            'method_page' =>
+                $this->customer_method_page,
+
+            'ref_page' =>
+                $this->customer_ref_page,
+
+            'address' =>
+                $this->customer_address,
+
+            'departamento_id' =>
+                $this->customer_departamento_id,
+
+            'municipio_id' =>
+                $this->customer_municipio_id,
+
+            'departamento_nombre' =>
+                $departamentoNombre,
+
+            'municipio_nombre' =>
+                $municipioNombre,
         ];
+
+
         $this->isModalOpen = false;
-        $this->dispatch('showNotification', 'Cliente ' . $this->customer_name . ' agregado exitosamente', 'success');
+
+
+        $mensaje =
+            $this->clienteEncontrado
+                ? 'Cliente ' . $this->customer_name . ' seleccionado exitosamente'
+                : 'Cliente ' . $this->customer_name . ' agregado exitosamente';
+
+
+        $this->dispatch(
+            'showNotification',
+            $mensaje,
+            'success'
+        );
     }
 
     public function updateCustomer()
@@ -193,6 +409,8 @@ class Pos extends Component
         $this->customer_departamento_id = null;
         $this->customer_municipio_id = null;
         $this->municipios = collect();
+
+        $this->clienteEncontrado = false;
 
         //$this->dispatch('showNotification', 'Cliente ' . $this->customer_name . ' eliminado exitosamente', 'error');
     }
@@ -1074,6 +1292,7 @@ class Pos extends Component
         $this->customer_departamento_id = null;
         $this->customer_municipio_id = null;
         $this->municipios = collect();
+        $this->clienteEncontrado = false;
     }
 
     public function updatedVendedorSeleccionado($value)

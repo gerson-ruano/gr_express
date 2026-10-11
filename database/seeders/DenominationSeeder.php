@@ -9,7 +9,7 @@ use App\Models\Denomination;
 class DenominationSeeder extends Seeder
 {
     /**
-     
+
      * Run the database seeds.
      */
     public function run(): void
@@ -29,6 +29,10 @@ class DenominationSeeder extends Seeder
         Denomination::create([
             'type'=>'BILLETE',
             'value'=>'100'
+        ]);
+        Denomination::create([
+            'type'=>'BILLETE',
+            'value'=>'50'
         ]);
         Denomination::create([
             'type'=>'BILLETE',
@@ -55,8 +59,12 @@ class DenominationSeeder extends Seeder
             'value'=>'0.5'
         ]);
         Denomination::create([
+            'type'=>'MONEDA',
+            'value'=>'0.25'
+        ]);
+        Denomination::create([
             'type'=>'OTRO',
-            'value'=>'0'
+            'value'=>'0.00'
         ]);
     }
 }

@@ -126,6 +126,11 @@ class ModulePermissionSeeder extends Seeder
         $seller->givePermissionTo(
             Permission::where('name', 'like', 'pos.%')->get()
         );
+        $seller->givePermissionTo(
+            Permission::whereIn('name', [
+                'products.view',
+            ])->get()
+        );
     }
 
         protected function translateModule($key)
