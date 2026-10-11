@@ -40,13 +40,14 @@ new #[Layout('layouts.guest')] class extends Component {
     <form wire:submit="login" class="space-y-4 ">
 
         <!--x-application-logo class="absolute w-6 h-6 text-gray-400 dark:text-gray-500 top-3 left-3"/-->
+        <x-input-label for="inicio" class="text-center w-full" :value="__('Inicio de sesion')"/>
 
         <!-- Email Address -->
         <div class="relative">
 
 
 
-            <x-input-label for="email" :value="__('Email')"/>
+            <x-input-label for="email"  :value="__('Email')"/>
 
             <!--div class="relative"-->
                 <x-text-input wire:model.live="form.email" id="email"
@@ -95,14 +96,14 @@ new #[Layout('layouts.guest')] class extends Component {
                 {{ __('Login') }}
             </x-primary-button>
         </div>
-        <a
+        {{--}}<a
             href="{{ route('register') }}"
             class="rounded-md px-3 py-2 text-blue-500 font-bold ring-1 ring-transparent transition
            hover:text-blue-700 focus:outline-none focus-visible:ring-[#FF2D20]
            dark:text-blue-400 dark:hover:text-blue-300 dark:focus-visible:ring-white underline"
         >
             {{ __('Registrarse') }}
-        </a>
+        </a>--}}
 
     </form>
 
