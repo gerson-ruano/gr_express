@@ -7,10 +7,10 @@
                 <h1 class="font-bold text-lg text-center">CIERRE DE CAJA</h1>
 
                 <tr>
-                    <th>No.</th>
+                    <th>#</th>
                     <th>Venta</th>
                     <th>Total</th>
-                    <th>Cantidad</th>
+                    <th>Metodo de pago</th>
                     <th>Cliente/Vendedor</th>
                     <th>Fecha y Hora</th>
                     <th>Acciones</th>
@@ -28,7 +28,7 @@
                         </td>
                         <td>{{$currency}}. {{number_format($item->total,2)}}</td>
                         <td>
-                            <h6>{{ $item->items }}</h6>
+                            <h6>{{ $item->payment_method }}</h6>
                         </td>
                         <td>
                             <h6>{{getNameSeller($item->seller)}}</h6>

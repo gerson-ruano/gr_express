@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('seller',30)->nullable();
             $table->string('mod_id',20)->nullable();
             $table->enum('status',['PAID','PENDING','CANCELLED'])->default('PAID');
+            $table->enum('payment_method',['EFECTIVO','TRANSFERENCIA','TARJETA_CREDITO','DEPOSITO'])->default('EFECTIVO');
             $table->decimal('taxes', 10, 2)->default(0);
             $table->json('customer_data')->nullable();
             $table->unsignedBigInteger('user_id');

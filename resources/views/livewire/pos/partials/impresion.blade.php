@@ -42,6 +42,16 @@
                 </div>
             </div>
 
+            <!-- Método de Pago -->
+            <div class="p-2 bg-white rounded shadow">
+                <div class="flex items-center justify-between">
+                    <span class="text-label">Metodo de Pago:</span>
+                    <h6 class="text-label {{ $payment_method == 0 ? 'text-red-500' : 'text-black' }}">
+                        {{ $payment_method == 0 ? 'INGRESE METODO DE PAGO!!' : $this->obtenerMetodoPago($payment_method) }}
+                    </h6>
+                </div>
+            </div>
+
             <!-- Información del Cliente o Vendedor -->
             <div class="p-2 bg-white rounded shadow">
                 @if($vendedorSeleccionado != 0)
@@ -64,10 +74,6 @@
             @if(!empty($customer_data))
                 <div class="p-2 bg-gray-100 rounded text-center text-label">
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                        <div class="flex justify-between">
-                            <strong>Metodo de Pago:</strong>
-                            <p>{{ $this->obtenerMetodoPago($customer_data['method_page']) }}</p>
-                        </div>
                         <div class="flex justify-between">
                             <strong>Ref. de Pago:</strong>
                             <p>{{ $customer_data['ref_page'] ?? 'N/A' }}</p>
@@ -157,8 +163,8 @@
 
             <a href="#"
                class="btn btn-primary w-full sm:w-auto border dark:border-gray-500 hover:border-gray-500"
-               onclick="openPdfWindow('{{ route('report.venta', ['change' => $change, 'efectivo'=> $efectivo, 'seller' => getNameSeller($vendedorSeleccionado), 'nextSaleNumber' => $nextSaleNumber, 'totalTaxes' => $totalTaxes, 'discount' => $discount, 'customer_data' => urlencode(json_encode($customer_data))]) }}')"
-               @if ($tipoPago == 0 || $efectivo < $totalPrice) disabled @endif>
+               onclick="openPdfWindow('{{ route('report.venta', ['change' => $change, 'efectivo'=> $efectivo, 'seller' => getNameSeller($vendedorSeleccionado), 'nextSaleNumber' => $nextSaleNumber, 'totalTaxes' => $totalTaxes, 'discount' => $discount, 'payment_method' => $payment_method, 'customer_data' => urlencode(json_encode($customer_data))]) }}')"
+               @if ($tipoPago == 0 || $payment_method == 0 || $efectivo < $totalPrice) disabled @endif>
         <span class="flex items-center justify-center space-x-2">
             <i class="fas fa-print"></i>
             <span>Detalles de Venta</span>

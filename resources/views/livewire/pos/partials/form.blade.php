@@ -14,28 +14,6 @@
 
                 {{-- Fila 1 --}}
                 <div class="flex flex-col sm:flex-row sm:space-x-2 w-full mb-2 items-center">
-                    <div class="w-full sm:w-1/2 mb-2 sm:mb-0 text-label">
-                        @include('livewire.components.select_filtro', [
-                            'default' => 'Seleccionar',
-                            'val_default' => 0,
-                            'title' => 'Metodo de Pago',
-                            'model' => 'customer_method_page',
-                            'valores' => $pagos,
-                        ])
-                    </div>
-
-                    <div class="w-full sm:w-1/2">
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Nombre</label>
-                        <input id="customer_name" type="text" placeholder="Nombre del cliente"
-                               class="input input-bordered input-info w-full mt-1 dark:bg-gray-900 dark:text-white dark:border-gray-600"
-                               wire:model.live="customer_name">
-                        @error('customer_name') <span class="text-red-400 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-
-                {{-- Fila 2 --}}
-                <div class="flex flex-col sm:flex-row sm:space-x-2 w-full mb-2 items-center">
                     {{--}}<div class="w-full sm:w-1/2 mb-2 sm:mb-0">
                         <label for="customer_nit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">NIT</label>
                         <input id="customer_nit" type="text" placeholder="Ingrese NIT"
@@ -91,7 +69,7 @@
                             <span class="text-green-500 text-sm">
 
                             <i class="fa fa-check-circle"
-                                aria-hidden="true"></i>
+                               aria-hidden="true"></i>
 
                             Cliente encontrado
 
@@ -101,6 +79,28 @@
 
                     </div>
 
+                </div>
+
+                {{-- Fila 2 --}}
+                <div class="flex flex-col sm:flex-row sm:space-x-2 w-full mb-2 items-center">
+                    {{--}}<div class="w-full sm:w-1/2 mb-2 sm:mb-0 text-label">
+                        @include('livewire.components.select_filtro', [
+                            'default' => 'Seleccionar',
+                            'val_default' => 0,
+                            'title' => 'Metodo de Pago',
+                            'model' => 'customer_method_page',
+                            'valores' => $pagos,
+                        ])
+                    </div>--}}
+
+                    <div class="w-full sm:w-1/2">
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Nombre</label>
+                        <input id="customer_name" type="text" placeholder="Nombre del cliente"
+                               class="input input-bordered input-info w-full mt-1 dark:bg-gray-900 dark:text-white dark:border-gray-600"
+                               wire:model.live="customer_name">
+                        @error('customer_name') <span class="text-red-400 text-sm">{{ $message }}</span>@enderror
+                    </div>
                     <div class="w-full sm:w-1/2">
                         <label for="customer_address"
                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Dirección</label>
@@ -110,6 +110,8 @@
                         @error('customer_address') <span class="text-red-400 text-sm">{{ $message }}</span>@enderror
                     </div>
                 </div>
+
+                {{-- Fila 3 --}}
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <!-- Departamento -->
@@ -142,7 +144,7 @@
                 </div>
 
                 {{-- Referencia de pago --}}
-                @if ($customer_method_page > 1 && $customer_method_page < 4 )
+                @if ($payment_method > 1 && $payment_method < 5 )
                     <div class="w-full text-center mt-2">
                         <label for="ref_page" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Referencia
                             de Pago</label>

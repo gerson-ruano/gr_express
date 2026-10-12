@@ -371,6 +371,11 @@
         </th>
 
 
+        <th width="9%">
+            Metodo de pago
+        </th>
+
+
         <th width="14%">
             Cliente / Vendedor
         </th>
@@ -543,6 +548,10 @@
 
                 </span>
 
+            </td>
+
+            <td>
+                {{ $item->payment_method ?? 'N/A' }}
             </td>
 
 

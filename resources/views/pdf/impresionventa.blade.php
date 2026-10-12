@@ -391,7 +391,7 @@
                 <tr>
 
                     <td class="label">
-                        Vendedor:
+                        Cliente:
                     </td>
 
                     <td>
@@ -409,14 +409,12 @@
                 <tr>
 
                     <td class="label">
-                        Método:
+                        Método de pago:
                     </td>
 
                     <td>
 
-                        {{ $metodoPago
-                            ?? 'N/A'
-                        }}
+                        {{ $metodoPago ?? 'N/A' }}
 
                     </td>
 
@@ -907,7 +905,7 @@
 
 
             <div class="section-label">
-                Efectivo recibido:
+                Recibido:
             </div>
 
             <div class="section-value">
@@ -919,7 +917,6 @@
                 ) }}
 
             </div>
-
 
             <div class="section-label">
                 Cambio:

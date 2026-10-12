@@ -457,7 +457,7 @@
                 <tr>
 
                     <td class="label">
-                        Método:
+                        Método de pago:
                     </td>
 
                     <td>

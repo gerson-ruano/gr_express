@@ -605,15 +605,13 @@
     <tr>
 
         <td>
-            Método:
+            Método de pago:
         </td>
 
 
         <td class="right">
 
-            {{ $metodoPago
-                ?? 'N/A'
-            }}
+            {{ $metodoPago ?? 'N/A' }}
 
         </td>
 
@@ -623,7 +621,7 @@
     <tr>
 
         <td>
-            Efectivo:
+            Recibido:
         </td>
 
 
@@ -731,7 +729,6 @@
     {{ $getNextSaleNumber }}
 
 </div-->
-
 
 </body>
 

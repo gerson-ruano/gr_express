@@ -17,13 +17,14 @@ use App\Models\Municipio;
 
 class Pos extends Component
 {
-    public $totalPrice, $itemsQuantity, $change, $tipoPago, $vendedorSeleccionado;
+    public $totalPrice, $itemsQuantity, $change, $tipoPago, $vendedorSeleccionado, $payment_method;
     public $customer_name, $customer_nit, $customer_method_page, $customer_ref_page, $customer_address;
     public $customer_departamento_id, $customer_municipio_id;
     public $customer_data = [];
     public $vendedores = [];
     public $valores = [];
     public $pagos = [];
+    public $payment = [];
     public $quantityInputs = [];
     public $efectivo = 0.00;
     public $discount = 0.00;
@@ -42,6 +43,7 @@ class Pos extends Component
         $this->efectivo = 0000.00;
         $this->change = 0.00;
         $this->tipoPago = null;
+        $this->payment_method = 0;
         $this->updateTotalPrice();
         $this->itemsQuantity = Cart::count(); //cantidad de articulos en el carrito
         $this->vendedores = $this->ListaVendedores();
@@ -57,7 +59,6 @@ class Pos extends Component
     protected $rules = [
         'customer_name' => 'required|min:2',
         'customer_nit' => 'nullable|min:8',
-        'customer_method_page' => 'required',
         'customer_ref_page' => 'nullable|max:50',
         'customer_address' => 'nullable|max:30',
         'customer_departamento_id' => 'nullable|exists:departamentos,id',
@@ -67,7 +68,6 @@ class Pos extends Component
     protected $messages = [
         'customer_name.required' => 'Nombre del cliente es requerido',
         'customer_name.min' => 'Debe tener al menos 2 caracteres',
-        'customer_method_page.required' => 'Metodo de pago es requerido',
         'customer_nit.min' => 'NIT debe tener al menos 8 numeros',
         'customer_ref_page.max' => 'El campo referencia de pago debe tener como maximo 30 caracteres',
         'customer_address.max' => 'El campo direcciòn debe tener como maximo 50 caracteres',
@@ -333,9 +333,6 @@ class Pos extends Component
             'nit' =>
                 $this->customer_nit,
 
-            'method_page' =>
-                $this->customer_method_page,
-
             'ref_page' =>
                 $this->customer_ref_page,
 
@@ -383,9 +380,6 @@ class Pos extends Component
             if (!empty($this->customer_nit)) {
                 $this->customer_data['nit'] = $this->customer_nit;
             }
-            if (!empty($this->customer_method_page)) {
-                $this->customer_data['method_page'] = $this->customer_method_page;
-            }
             if (!empty($this->customer_ref_page)) {
                 $this->customer_data['ref_page'] = $this->customer_ref_page;
             }
@@ -403,7 +397,6 @@ class Pos extends Component
         $this->customer_data = [];
         $this->customer_name = '';
         $this->customer_nit = '';
-        $this->customer_method_page = '';
         $this->customer_ref_page = '';
         $this->customer_address = '';
         $this->customer_departamento_id = null;
@@ -428,10 +421,10 @@ class Pos extends Component
     public function MetodosPagos()
     {
         $reportTypes = [
-            (object)['id' => '1', 'name' => 'Efectivo'],
-            (object)['id' => '2', 'name' => 'Transferencia'],
-            (object)['id' => '3', 'name' => 'Deposito'],
-            (object)['id' => '4', 'name' => 'Tarjeta Credito'],
+            (object)['id' => '1', 'name' => 'EFECTIVO'],
+            (object)['id' => '2', 'name' => 'TRANSFERENCIA'],
+            (object)['id' => '3', 'name' => 'TARJETA_CREDITO'],
+            (object)['id' => '4', 'name' => 'DEPOSITO'],
             //(object)['id' => '3', 'name' => 'ANULADO'],
         ];
         return $reportTypes;
@@ -515,27 +508,6 @@ class Pos extends Component
         }
         return $empresa;
     }
-
-    /*public function calculateGlobalTax()
-    {
-        $totalQuantity = 0;
-        $totalSale = 0;
-
-        foreach (Cart::content() as $item) {
-            $totalQuantity += $item->qty; // Contar la cantidad total de productos
-            $totalSale += $item->price * $item->qty; // Calcular el total de la venta
-        }
-
-        $generalTaxRatePercent = setting('pos_tax_rate', 0.12); // Impuesto general del 12% (puedes cambiarlo)
-        $generalTaxRate = $generalTaxRatePercent / 100;
-        $totalTaxes = $totalSale * $generalTaxRate; // Calcular el total de impuestos
-
-        return [
-            'totalTaxes' => round($totalTaxes, 2), //number_format($totalTaxes, 2
-            'generalTaxRate' => $generalTaxRate * 100, // Guardar el porcentaje para mostrar
-            'totalQuantity' => $totalQuantity, // Cantidad total de productos
-        ];
-    }*/
 
     public function calculateGlobalTax()
     {
@@ -1039,6 +1011,7 @@ class Pos extends Component
         $this->updateTotalPrice();
         $this->itemsQuantity = Cart::count();
         $this->tipoPago = 0;
+        $this->payment_method = 0;
         $this->vendedorSeleccionado = 0;
         $this->dispatch('showNotification', 'Se eliminaron Todos los Productos del carrito', 'error');
     }
@@ -1067,6 +1040,12 @@ class Pos extends Component
             $tipoPagoSeleccionado = $this->translateTipoPago($this->tipoPago);
         } else {
             $this->dispatch('showNotification', 'Debe seleccionar el TIPO DE PAGO que utilizará', 'warning');
+            return;
+        }
+        if (isset($this->payment_method) && !empty($this->payment_method)) {
+            //$tipoPagoSeleccionado = $this->translateTipoPago($this->tipoPago);
+        } else {
+            $this->dispatch('showNotification', 'Debe seleccionar el METODO DE PAGO que utilizará', 'warning');
             return;
         }
 
@@ -1104,6 +1083,7 @@ class Pos extends Component
                 'items' => $this->itemsQuantity,
                 'cash' => $this->efectivo,
                 'status' => $tipoPagoSeleccionado,
+                'payment_method' => $this->payment_method,
                 'change' => $this->change,
                 'seller' => $vendedorAgregado,
                 'taxes' => $taxData['totalTaxes'] ?? 0,
@@ -1210,6 +1190,7 @@ class Pos extends Component
             $this->updateTotalPrice();
             $this->itemsQuantity = Cart::count();
             $this->tipoPago = 0;
+            $this->payment_method = 0;
             $this->vendedorSeleccionado = 0;
             $this->getNextSaleNumber();
             $this->dispatch('noty-done', type: 'success', message: 'Venta ' . $this->nextSaleNumber - 1 . ' realizada con éxito ');
@@ -1235,6 +1216,10 @@ class Pos extends Component
         }
         if ($this->tipoPago == 0 || $this->tipoPago == null) {
             $this->dispatch('showNotification', 'Debe seleccionar el ESTADO DE PAGO de la VENTA', 'warning');
+            return;
+        }
+        if ($this->payment_method == 0 || $this->payment_method == null) {
+            $this->dispatch('showNotification', 'Debe seleccionar el METODO DE PAGO de la VENTA', 'warning');
             return;
         }
 
@@ -1274,6 +1259,7 @@ class Pos extends Component
             'nextSaleNumber' => $sale->id,
             'totalTaxes' => $sale->taxes,
             'discount' => $totalDiscount,
+            'payment_method' => $sale->payment_method,
             //optional($sale->details->first())->discount ?? 0,
             'customer_data' => urlencode(json_encode($sale->customer_data))
         ]);

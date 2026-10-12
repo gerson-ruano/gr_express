@@ -238,7 +238,7 @@ class ExportController extends Controller
         );
     }
 
-    // REPORTE DE CIERRE DE CAJA GENERAL
+
     // REPORTE DE CIERRE DE CAJA GENERAL
     public function reportBoxGeneral(
         $userid,
@@ -428,6 +428,7 @@ class ExportController extends Controller
         $getNextSaleNumber,
         $totalTaxes,
         $discount,
+        $payment_method,
         $customer_data
     ) {
 
@@ -438,15 +439,26 @@ class ExportController extends Controller
             $getNextSaleNumber,
             $totalTaxes,
             $discount,
+            $payment_method,
             $customer_data
         );
+
+        /*
+         * La venta todavía NO existe.
+         * Usamos el método recibido desde el POS.
+         */
+        $data['payment_method'] = $payment_method;
+
+        $data['metodoPago'] =
+            $this->obtenerMetodoPago(
+                $payment_method
+            );
 
 
         $pdf = $this->generatePdf(
             'pdf.impresionventa',
             $data
         );
-
 
         return $pdf->stream(
             "Venta_{$getNextSaleNumber}_{$this->currentDate}.pdf"
@@ -461,8 +473,17 @@ class ExportController extends Controller
         $getNextSaleNumber,
         $totalTaxes,
         $discount,
+        $payment_method,
         $customer_data
     ) {
+
+        /*
+         * La venta ya está guardada.
+         */
+        $sale = Sale::findOrFail(
+            $getNextSaleNumber
+        );
+
 
         $data = $this->getVentaReportData(
             $change,
@@ -471,8 +492,25 @@ class ExportController extends Controller
             $getNextSaleNumber,
             $totalTaxes,
             $discount,
+            $payment_method,
             $customer_data
         );
+
+        /*
+ * Método de pago ya guardado
+ * directamente en SALES.
+ */
+        $metodoPago =
+            $sale->payment_method ?? 'N/A';
+
+        $data['payment_method'] =
+            $sale->payment_method;
+
+        $data['metodoPago'] =
+            $metodoPago;
+
+        $data['sale'] =
+            $sale;
 
 
         $pdf = $this->generatePdf(
@@ -610,12 +648,12 @@ class ExportController extends Controller
                 ? $sale->customer_data
                 : [];
 
-
+        /*
+         * Método de pago directamente desde SALES.
+         * Ya está guardado como texto.
+         */
         $metodoPago =
-            $this->obtenerMetodoPago(
-                $customer['method_page']
-                ?? null
-            );
+            $sale->payment_method ?? 'N/A';
 
 
         /*
@@ -689,6 +727,9 @@ class ExportController extends Controller
                     'customer' =>
                         $customer,
 
+                    'payment_method' =>
+                        $sale->payment_method,
+
                     'metodoPago' =>
                         $metodoPago,
 
@@ -702,84 +743,6 @@ class ExportController extends Controller
             "VentaDetails{$getNextSaleNumber}_{$this->currentDate}.pdf"
         );
     }
-    /*public function reportDetails($seller, $getNextSaleNumber)
-    {
-        //$sale = Sale::with('details', 'seller')->find($getNextSaleNumber);
-        $sale = Sale::with(['details.product', 'seller'])->find($getNextSaleNumber);
-        //dd($sale);
-
-        if (!$sale) {
-            return response()->json(['error' => 'Venta no encontrada'], 404);
-        }
-
-        $resumen = $this->calcularResumenVenta($sale);
-        $lineas = $this->prepararDetallesVenta($sale->details);
-
-        $statusMessage = getSaleStatusMessage($getNextSaleNumber);
-        $empresa = $this->companyVentas();
-        $usuario = $this->currentUser();
-
-        $seller_name = getNameSeller($sale->seller); //Obtiene del HELPER los VENDEDORES
-        $metodoPago = $this->obtenerMetodoPago($sale['customer_data']['method_page'] ?? null);
-        //dd($metodoPago);
-
-        // Generar el PDF con la vista y los datos
-        $pdf = $this->generatePdf('pdf.reportedetails', [
-            'getNextSaleNumber' => $getNextSaleNumber,
-            'details' => $sale->details,
-            'seller' => $seller,
-            'seller_name' => $seller_name,
-            'usuario' => $usuario,
-            'sale' => $sale,
-            'statusMessage' => $statusMessage,
-            'empresa' => $empresa,
-            'customer' => $sale->customer_data,
-            'metodoPago' => $metodoPago,
-            'currency' => $this->currency,
-            'resumen' => $resumen,
-            'lineas' => $lineas,
-
-        ]);
-
-        // Devolver el PDF como una respuesta de streaming
-        return $pdf->stream("VentaDetails{$getNextSaleNumber}_{$this->currentDate}.pdf");
-    }*/
-
-    // REPORTE DE CIERRE DE VENTA - DETALLES
-    /*public function reportBox($seller, $getNextSaleNumber)
-    {
-
-        $sale = Sale::with('details','seller')->find($getNextSaleNumber);
-        //dd($sale);
-
-        if (!$sale) {
-            return response()->json(['error' => 'Venta no encontrada'], 404);
-        }
-
-        $empresa = $this->companyVentas();
-        $usuario = $this->currentUser();
-
-        //$seller_name = $this->obtenerNombreVendedor($sale->seller);
-        $seller_name = getNameSeller($sale->seller);
-        $metodoPago = $this->obtenerMetodoPago($sale['customer_data']['method_page'] ?? null);
-
-        // Generar el PDF con la vista y los datos
-        $pdf = $this->generatePdf('pdf.reportebox', [
-            'getNextSaleNumber' => $getNextSaleNumber,
-            'details' => $sale->details,
-            'seller' => $seller,
-            'seller_name' => $seller_name,
-            'usuario' => $usuario,
-            'sale' => $sale,
-            'empresa' => $empresa,
-            'customer' => $sale->customer_data,
-            'metodoPago' => $metodoPago,
-            'currency' => $this->currency,
-        ]);
-
-        // Devolver el PDF como una respuesta de streaming
-        return $pdf->stream("CloseBox{$getNextSaleNumber}_{$this->currentDate}.pdf");
-    }*/
 
     public function reportBox(
         $seller,
@@ -808,11 +771,11 @@ class ExportController extends Controller
                 $sale->seller
             );
 
+        /*
+         * Método de pago directamente desde SALES.
+         */
         $metodoPago =
-            $this->obtenerMetodoPago(
-                $sale['customer_data']['method_page']
-                ?? null
-            );
+            $sale->payment_method ?? 'N/A';
 
 
         /*
@@ -847,6 +810,7 @@ class ExportController extends Controller
                 'sale' => $sale,
                 'empresa' => $empresa,
                 'customer' => $sale->customer_data,
+                'payment_method' => $sale->payment_method,
                 'metodoPago' => $metodoPago,
                 'currency' => $this->currency,
             ]
@@ -922,6 +886,7 @@ class ExportController extends Controller
         $getNextSaleNumber,
         $totalTaxes,
         $discount,
+        $payment_method,
         $customer_data
     ) {
 
@@ -956,6 +921,14 @@ class ExportController extends Controller
             getSaleStatusMessage(
                 $getNextSaleNumber
             );
+
+        $paymentMethodId = $sale
+            ? $sale->payment_method
+            : $payment_method;
+
+        $metodoPago = $this->obtenerMetodoPago(
+            $paymentMethodId
+        );
 
 
         /*
@@ -1079,11 +1052,13 @@ class ExportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $metodoPago =
-            $this->obtenerMetodoPago(
-                $customerData['method_page']
-                ?? null
-            );
+        $paymentMethodId = $sale
+            ? $sale->payment_method
+            : $payment_method;
+
+        $metodoPago = $this->obtenerMetodoPago(
+            $paymentMethodId
+        );
 
 
         /*
@@ -1155,6 +1130,8 @@ class ExportController extends Controller
 
             'metodoPago' =>
                 $metodoPago,
+
+            'payment_method' => $paymentMethodId,
 
             'currency' =>
                 $this->currency,

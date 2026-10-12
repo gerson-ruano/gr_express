@@ -14,11 +14,11 @@
                 <thead>
                 <h1 class="font-bold text-lg text-center">REPORTES DE VENTAS</h1>
                 <tr>
-                    <th>No.</th>
+                    <th>#</th>
                     <th>Venta</th>
                     <th>Estado</th>
                     <th>Total</th>
-                    <th>Cantidad</th>
+                    <th>Metodo de Pago</th>
                     <th>Usuario</th>
                     <th>Cliente/Vendedor</th>
                     <th>Fecha y Hora</th>
@@ -49,7 +49,7 @@
                         </td>
                         <td>{{$currency}}. {{number_format($item->total,2)}}</td>
                         <td>
-                            <h6>{{ $item->items }}</h6>
+                            <h6>{{ $item->payment_method }}</h6>
                         </td>
                         <td>
                             <h6>{{ $item->user }}</h6>
