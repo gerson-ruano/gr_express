@@ -45,9 +45,7 @@ Route::middleware(['auth','checkStatus'])->group(function () {
     });
     Route::middleware(['role:Admin|Employee'])->group(function () {
         Route::get('categories', Categories::class)->name('categories');
-        Route::get('products', Products::class)->name('products');
         Route::get('coins', Coins::class)->name('coins');
-        Route::get('reports', Reports::class)->name('reports');
         Route::get('cashout', Cashout::class)->name('cashout');
         Route::get('graphics', [GraphicsController::class, 'index'])->name('graphics');
 
@@ -74,6 +72,8 @@ Route::middleware(['auth','checkStatus'])->group(function () {
 
     Route::middleware(['role:Admin|Employee|Seller'])->group(function () {
         Route::get('pos', Pos::class)->name('pos');
+        Route::get('products', Products::class)->name('products');
+        Route::get('reports', Reports::class)->name('reports');
     });
 
     //RegisterModuleRoutes(config('modules'));
