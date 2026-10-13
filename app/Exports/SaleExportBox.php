@@ -43,15 +43,19 @@ class SaleExportBox
 
         // Definir los encabezados
         $sheet->setCellValue('A1', 'N0. VENTA')
-            ->setCellValue('B1', 'IMPORTE')
-            ->setCellValue('C1', 'CANTIDAD')
-            ->setCellValue('D1', 'ESTADO')
-            ->setCellValue('E1', 'CLIENTE')
-            ->setCellValue('F1', 'USUARIO')
-            ->setCellValue('G1', 'FECHA/HORA');
+            ->setCellValue('B1', 'BRUTO')
+            ->setCellValue('C1', 'DESCUENTO')
+            ->setCellValue('D1', 'IVA')
+            ->setCellValue('E1', 'IMPORTE')
+            ->setCellValue('F1', 'CANTIDAD')
+            ->setCellValue('G1', 'ESTADO')
+            ->setCellValue('H1', 'METODO DE PAGO')
+            ->setCellValue('I1', 'CLIENTE')
+            ->setCellValue('J1', 'USUARIO')
+            ->setCellValue('K1', 'FECHA/HORA');
 
         // Aplicar estilos
-        $sheet->getStyle('A1:G1')->applyFromArray([
+        $sheet->getStyle('A1:K1')->applyFromArray([
             'font' => ['bold' => true],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             'fill' => [
@@ -71,19 +75,57 @@ class SaleExportBox
             //dd($sale);
             $translatedStatus = $statusTranslations[$sale->status] ?? $sale->status;
 
+            /*
+             * BRUTO:
+             * precio x cantidad antes de descuento.
+             */
+            $valorBruto =
+                $sale->details->sum(function ($detail) {
+
+                    return
+                        (float) $detail->price *
+                        (float) $detail->quantity;
+                });
+
+
+            /*
+             * DESCUENTO:
+             * descuento histórico almacenado
+             * en sale_details.
+             */
+            $descuento =
+                $sale->details->sum(function ($detail) {
+
+                    return
+                        (float) ($detail->discount ?? 0);
+                });
+
+
+            /*
+             * IVA:
+             * guardado directamente en sales.taxes.
+             */
+            $iva =
+                (float) ($sale->taxes ?? 0);
+
+
             $sheet->setCellValue('A' . $row, $sale->id)
-                ->setCellValue('B' . $row, $sale->total)
-                ->setCellValue('C' . $row, $sale->items)
-                ->setCellValue('D' . $row, $translatedStatus)
-                ->setCellValue('E' . $row, getNameSeller($sale->seller))
-                ->setCellValue('F' . $row, getNameSeller($sale->user_id))
-                ->setCellValue('G' . $row, Date::dateTimeToExcel($sale->created_at));
+                ->setCellValue('B' . $row, round($valorBruto, 2))
+                ->setCellValue('C' . $row, round($descuento, 2))
+                ->setCellValue('D' . $row, round($iva, 2))
+                ->setCellValue('E' . $row, $sale->total)
+                ->setCellValue('F' . $row, $sale->items)
+                ->setCellValue('G' . $row, $translatedStatus)
+                ->setCellValue('H' . $row, $sale->payment_method ?? 'N/A')
+                ->setCellValue('I' . $row, getNameSeller($sale->seller))
+                ->setCellValue('J' . $row, getNameSeller($sale->user_id))
+                ->setCellValue('K' . $row, Date::dateTimeToExcel($sale->created_at));
 
             $row++;
         }
 
         // Aplicar formato a las columnas
-        $sheet->getStyle('A1:G' . ($row - 1))->applyFromArray([
+        $sheet->getStyle('A1:K' . ($row - 1))->applyFromArray([
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             'borders' => [
                 'allBorders' => [
@@ -94,21 +136,29 @@ class SaleExportBox
 
         // Definir los formatos de columnas
         $sheet->getStyle('A')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('B')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('C')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('D')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('E')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('F')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('G')->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
+        $sheet->getStyle('B')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('C')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('D')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('E')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('F')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
+        $sheet->getStyle('G')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('H')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('I')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('J')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('K')->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
 
         // Ajustar el ancho de las columnas
         $sheet->getColumnDimension('A')->setWidth(15);
         $sheet->getColumnDimension('B')->setWidth(15);
         $sheet->getColumnDimension('C')->setWidth(15);
         $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(20);
-        $sheet->getColumnDimension('F')->setWidth(20);
-        $sheet->getColumnDimension('G')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(22);
+        $sheet->getColumnDimension('I')->setWidth(20);
+        $sheet->getColumnDimension('J')->setWidth(20);
+        $sheet->getColumnDimension('K')->setWidth(20);
 
         // Crear el writer y guardar el archivo
         $writer = new Xlsx($spreadsheet);
@@ -120,12 +170,48 @@ class SaleExportBox
 
     public function collection()
     {
-        // Devuelve la colección de ventas
-        return Sale::whereBetween('created_at', [$this->fromDate, $this->toDate])
-            ->where('status', 'Paid')
-            ->where('user_id', $this->userid)
+        $query =
+            Sale::with('details')
+                ->whereBetween(
+                    'created_at',
+                    [
+                        $this->fromDate,
+                        $this->toDate
+                    ]
+                )
+                ->where(
+                    'status',
+                    'PAID'
+                );
+
+
+        /*
+         * Si userid = 0 se incluyen todos.
+         */
+        if ((int) $this->userid !== 0) {
+
+            $query->where(
+                'user_id',
+                $this->userid
+            );
+        }
+
+
+        return $query
+            ->orderBy(
+                'created_at',
+                'asc'
+            )
             ->get([
-                'id', 'total', 'items', 'status', 'seller', 'user_id', 'created_at'
+                'id',
+                'total',
+                'items',
+                'status',
+                'payment_method',
+                'taxes',
+                'seller',
+                'user_id',
+                'created_at'
             ]);
     }
 }

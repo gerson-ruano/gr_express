@@ -837,12 +837,6 @@ class ExportController extends Controller
     // REPORTE DE VENTAS EXCEL
     public function reportExcel($userId, $reportType, $dateFrom = null, $dateTo = null, $selectTipoEstado = null)
     {
-        /*$export = new SaleExport();
-        $filePath = $export->reportExcel();
-
-        // Crear una respuesta para descargar el archivo
-        return response()->download($filePath)->deleteFileAfterSend(true);*/
-
         $export = new SaleExport($userId, $reportType, $dateFrom, $dateTo, $selectTipoEstado);
         $filePath = $export->reportExcel();
 

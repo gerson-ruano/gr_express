@@ -47,15 +47,19 @@ class SaleExport
 
         // Definir los encabezados
         $sheet->setCellValue('A1', 'N0. VENTA')
-            ->setCellValue('B1', 'IMPORTE')
-            ->setCellValue('C1', 'CANTIDAD')
-            ->setCellValue('D1', 'ESTADO')
-            ->setCellValue('E1', 'CLIENTE')
-            ->setCellValue('F1', 'USUARIO')
-            ->setCellValue('G1', 'FECHA/HORA');
+            ->setCellValue('B1', 'BRUTO')
+            ->setCellValue('C1', 'DESCUENTO')
+            ->setCellValue('D1', 'IVA')
+            ->setCellValue('E1', 'IMPORTE')
+            ->setCellValue('F1', 'CANTIDAD')
+            ->setCellValue('G1', 'ESTADO')
+            ->setCellValue('H1', 'METODO DE PAGO')
+            ->setCellValue('I1', 'CLIENTE/VENDEDOR')
+            ->setCellValue('J1', 'USUARIO')
+            ->setCellValue('K1', 'FECHA/HORA');
 
-        // Aplicar estilos
-        $sheet->getStyle('A1:G1')->applyFromArray([
+        // Aplicar estilos encabezados
+        $sheet->getStyle('A1:K1')->applyFromArray([
             'font' => ['bold' => true],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             'fill' => [
@@ -69,24 +73,57 @@ class SaleExport
         // Obtener datos de ventas
         $data = $this->fetchSalesData();
 
-        // Escribir datos en la hoja
         $row = 2;
         foreach ($data as $sale) {
             $translatedStatus = $statusTranslations[$sale->status] ?? $sale->status;
 
-            $sheet->setCellValue('A' . $row, $sale->id)
-                ->setCellValue('B' . $row, $sale->total)
-                ->setCellValue('C' . $row, $sale->items)
-                ->setCellValue('D' . $row, $translatedStatus)
-                ->setCellValue('E' . $row, getNameSeller($sale->seller))
-                ->setCellValue('F' . $row, $sale->user)
-                ->setCellValue('G' . $row, Date::dateTimeToExcel($sale->created_at));
+            /*
+             * Valor bruto antes de descuentos.
+             */
+            $valorBruto =
+                $sale->details->sum(function ($detail) {
+
+                    return
+                        (float) $detail->price *
+                        (float) $detail->quantity;
+                });
+
+            /*
+             * Descuento histórico guardado
+             * en sale_details.
+             */
+            $descuento =
+                $sale->details->sum(function ($detail) {
+
+                    return
+                        (float) ($detail->discount ?? 0);
+                });
+
+            /*
+             * IVA guardado en la venta.
+             */
+            $iva =
+                (float) ($sale->taxes ?? 0);
+
+
+            $sheet
+                ->setCellValue('A' . $row, $sale->id)
+                ->setCellValue('B' . $row, round($valorBruto, 2))
+                ->setCellValue('C' . $row, round($descuento, 2))
+                ->setCellValue('D' . $row, round($iva, 2))
+                ->setCellValue('E' . $row, $sale->total)
+                ->setCellValue('F' . $row, $sale->items)
+                ->setCellValue('G' . $row, $translatedStatus)
+                ->setCellValue('H' . $row, $sale->payment_method ?? 'N/A')
+                ->setCellValue('I' . $row, getNameSeller($sale->seller))
+                ->setCellValue('J' . $row, $sale->user)
+                ->setCellValue('K' . $row, Date::dateTimeToExcel($sale->created_at));
 
             $row++;
         }
 
         // Aplicar formato a las columnas
-        $sheet->getStyle('A1:G' . ($row - 1))->applyFromArray([
+        $sheet->getStyle('A1:K' . ($row - 1))->applyFromArray([
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             'borders' => [
                 'allBorders' => [
@@ -97,21 +134,29 @@ class SaleExport
 
         // Definir los formatos de columnas
         $sheet->getStyle('A')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('B')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('C')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
-        $sheet->getStyle('D')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('E')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('F')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
-        $sheet->getStyle('G')->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
+        $sheet->getStyle('B')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('C')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('D')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('E')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet->getStyle('F')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
+        $sheet->getStyle('G')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('H')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('I')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('J')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('K')->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
 
         // Ajustar el ancho de las columnas
         $sheet->getColumnDimension('A')->setWidth(15);
         $sheet->getColumnDimension('B')->setWidth(15);
         $sheet->getColumnDimension('C')->setWidth(15);
         $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(20);
-        $sheet->getColumnDimension('F')->setWidth(20);
-        $sheet->getColumnDimension('G')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(22);
+        $sheet->getColumnDimension('I')->setWidth(20);
+        $sheet->getColumnDimension('J')->setWidth(20);
+        $sheet->getColumnDimension('K')->setWidth(20);
 
         // Crear el writer y guardar el archivo
         $writer = new Xlsx($spreadsheet);
@@ -123,18 +168,55 @@ class SaleExport
 
     protected function fetchSalesData()
     {
-        $from = Carbon::parse($this->dateFrom)->format('Y-m-d') . ' 00:00:00';
-        $to = Carbon::parse($this->dateTo)->format('Y-m-d') . ' 23:59:59';
-
         if ($this->reportType == 0) {
-            // Si es el tipo de reporte 0, el rango de fechas no debe ser considerado
-            $from = Carbon::now()->format('Y-m-d') . ' 00:00:00';
-            $to = Carbon::now()->format('Y-m-d') . ' 23:59:59';
+
+            $from =
+                Carbon::now()
+                    ->startOfDay();
+
+            $to =
+                Carbon::now()
+                    ->endOfDay();
+
+        } else {
+
+            $from =
+                Carbon::parse(
+                    $this->dateFrom
+                )->startOfDay();
+
+            $to =
+                Carbon::parse(
+                    $this->dateTo
+                )->endOfDay();
         }
 
-        $query = Sale::join('users as u', 'u.id', 'sales.user_id')
-            ->select('sales.id', 'sales.total', 'sales.items', 'sales.status', 'sales.seller', 'u.name as user', 'sales.created_at')
-            ->whereBetween('sales.created_at', [$from, $to]);
+        $query = Sale::with('details')
+            ->join(
+                'users as u',
+                'u.id',
+                '=',
+                'sales.user_id'
+            )
+            ->select(
+                'sales.id',
+                'sales.total',
+                'sales.items',
+                'sales.status',
+                'sales.payment_method',
+                'sales.taxes',
+                'sales.seller',
+                'u.name as user',
+                'sales.created_at'
+            )
+            ->whereBetween(
+                'sales.created_at',
+                [
+                    $from,
+                    $to
+                ]
+            );
+
 
         if ($this->userId != 0) {
             $query->where('user_id', $this->userId);
@@ -144,7 +226,12 @@ class SaleExport
             $query->where('sales.status', $this->selectTipoEstado);
         }
 
-        return $query->get();
+        return $query
+            ->orderBy(
+                'sales.created_at',
+                'asc'
+            )
+            ->get();
     }
     /*public function obtenerNombreVendedor($seller)
     {
