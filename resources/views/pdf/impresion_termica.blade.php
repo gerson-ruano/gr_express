@@ -250,17 +250,15 @@
 </div>
 
 
-<div>
 
-    <strong>
-        NIT:
-    </strong>
-
-    {{ $customer['nit']
-        ?? 'CF'
-    }}
-
-</div>
+@if(!$customer['nit'])
+    {{-- No se muestra nada si es CF o no tiene NIT --}}
+@else
+    <div>
+        <strong>NIT:</strong>
+        {{ $customer['nit'] ?? 'CF' }}
+    </div>
+@endif
 
 
 @if(!empty(
@@ -288,161 +286,78 @@
 {{-- PRODUCTOS --}}
 {{-- ===================================================== --}}
 
-<div class="producto-header">
+<div class="overflow-x-auto">
+    <table class="table table-xs table-zebra w-full">
 
-    <span>
-        PRODUCTOS
-    </span>
+        {{-- ENCABEZADO --}}
+        <thead>
+        <tr class="text-[9px] uppercase">
+            <th class="w-2/5">Producto</th>
+            <th class="text-right">Cant. x Precio</th>
+            <th class="text-right">Subtotal</th>
+            <th class="text-right">Desc.</th>
+            <th class="text-right">Total</th>
+        </tr>
+        </thead>
 
-</div>
+        <tbody class="text-[10px]">
 
+        @forelse($lineas as $linea)
 
-@forelse($lineas as $linea)
-
-    <div class="producto">
-
-
-        {{-- NOMBRE --}}
-        <div class="producto-nombre">
-
-            {{ $linea['nombre'] }}
-
-        </div>
-
-
-        {{-- CÓDIGO --}}
-        @if(
-            !empty($linea['codigo']) &&
-            $linea['codigo'] != '-'
-        )
-
-            <div style="font-size: 8px;">
-
-                Cod:
-                {{ $linea['codigo'] }}
-
-            </div>
-
-        @endif
-
-
-        <table class="producto-detalle">
-
-
-            {{-- PRECIO ORIGINAL --}}
             <tr>
-
+                {{-- NOMBRE --}}
                 <td>
+                    <div class="font-semibold leading-tight">
+                        {{ $linea['nombre'] }}
+                    </div>
+                </td>
 
-                    {{ number_format(
-                        $linea['cantidad'],
-                        2
-                    ) }}
-
+                {{-- CANTIDAD x PRECIO --}}
+                <td class="text-right whitespace-nowrap">
+                    {{ number_format($linea['cantidad'], 0) }}
                     x
-
                     {{ $currency }}.
-
-                    {{ number_format(
-                        $linea['precio'],
-                        2
-                    ) }}
-
+                    {{ number_format($linea['precio'], 2) }}
                 </td>
 
-
-                <td class="right">
-
+                {{-- SUBTOTAL --}}
+                <td class="text-right whitespace-nowrap">
                     {{ $currency }}.
-
-                    {{ number_format(
-                        $linea['subtotal'],
-                        2
-                    ) }}
-
+                    {{ number_format($linea['subtotal'], 2) }}
                 </td>
 
+                {{-- DESCUENTO (solo monto) --}}
+                <td class="text-right whitespace-nowrap">
+                    @if($linea['descuento'] > 0)
+                        <span class="text-error">
+                                -{{ $currency }}.
+                                {{ number_format($linea['descuento'], 2) }}
+                            </span>
+                    @else
+                        <span class="opacity-40">—</span>
+                    @endif
+                </td>
+
+                {{-- TOTAL --}}
+                <td class="text-right whitespace-nowrap font-bold">
+                    {{ $currency }}.
+                    {{ number_format($linea['total'], 2) }}
+                </td>
             </tr>
 
+        @empty
 
-            {{-- DESCUENTO --}}
-            @if($linea['descuento'] > 0)
+            <tr>
+                <td colspan="5" class="text-center opacity-60 py-4">
+                    No existen productos registrados.
+                </td>
+            </tr>
 
-                <tr>
+        @endforelse
 
-                    <td>
-
-                        Desc.
-
-                        {{ number_format(
-                            $linea['porcentaje_descuento'],
-                            2
-                        ) }}%
-
-                    </td>
-
-
-                    <td class="right">
-
-                        - {{ $currency }}.
-
-                        {{ number_format(
-                            $linea['descuento'],
-                            2
-                        ) }}
-
-                    </td>
-
-                </tr>
-
-
-                {{-- TOTAL DESPUÉS DE DESCUENTO --}}
-                <tr>
-
-                    <td>
-
-                        <strong>
-                            Total producto
-                        </strong>
-
-                    </td>
-
-
-                    <td class="right">
-
-                        <strong>
-
-                            {{ $currency }}.
-
-                            {{ number_format(
-                                $linea['total'],
-                                2
-                            ) }}
-
-                        </strong>
-
-                    </td>
-
-                </tr>
-
-            @endif
-
-
-        </table>
-
-    </div>
-
-
-@empty
-
-    <div class="text-center">
-
-        No existen productos
-        registrados.
-
-    </div>
-
-@endforelse
+        </tbody>
+    </table>
+</div>
 
 
 <div class="separator"></div>
